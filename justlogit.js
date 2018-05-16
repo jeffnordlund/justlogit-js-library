@@ -121,6 +121,8 @@
       var url = BASE_URL + this.token + '/perf?m=' + encodeURIComponent(method) + '&t=' + executionTime;
       if (trackingEnabled) url += '&u=' + encodeURIComponent(getUserMarker());
       if (document.referrer) url += '&r=' + encodeURIComponent(document.referrer);
+      if (doNotTrack) url += '&dnt=true';
+
       if (additionalValues && typeof additionalValues === 'object') {
         for (var key in additionalValues) {
           url += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(additionalValues[key]);
@@ -137,6 +139,8 @@
       if (details) url += '&d=' + encodeURIComponent(details);
       if (trackingEnabled) url += '&u=' + encodeURIComponent(getUserMarker());
       if (document.referrer) url += '&r=' + encodeURIComponent(document.referrer);
+      if (doNotTrack) url += '&dnt=true';
+
       if (additionalValues && typeof additionalValues === 'object') {
         for (var key in additionalValues) {
           url += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(additionalValues[key]);
@@ -161,6 +165,8 @@
       obj.stack = (err.stack || '');
       if (trackingEnabled) obj.user = getUserMarker();
       if (document.referrer) obj.referrer = document.referrer;
+      if (doNotTrack) obj.donottrack = true;
+
       if (additionalValues && typeof additionalValues === 'object') {
         for (var key in additionalValues) {
           obj[key] = additionalValues[key];
@@ -179,6 +185,8 @@
       if (details) url += '&d=' + encodeURIComponent(details);
       if (trackingEnabled) url += '&u=' + encodeURIComponent(getUserMarker());
       if (document.referrer) url += '&r=' + encodeURIComponent(document.referrer);
+      if (doNotTrack) url += '&dnt=true';
+
       if (additionalValues && typeof additionalValues === 'object') {
         for (var key in additionalValues) {
           url += '&' + encodeURIComponent(key) + '=' + encodeURIComponent(additionalValues[key]);
