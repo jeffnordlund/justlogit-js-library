@@ -13,6 +13,7 @@
     this.userid = null;
     this.dnt = false;
     this.handleGlobalErrors = false;
+    this.generateRandomId = true;
 
 
     function calculateMilliseconds(start, end) {
@@ -72,12 +73,13 @@
     this.getUserMarker = function () {
       if (!this.userid) {
         this.userid = this.getMarkerFromCookie();
-        if (!this.userid) {
+        if (!this.userid && this.generateRandomId) {
           this.userid = createUserMarker();
           this.setCookie(this.userid);
         }
       }
-      return this.userid;
+      if (this.userid === undefined || this.userid === null) return '';
+      else return this.userid;
     }
 
     this.getMarkerFromCookie = function () {
@@ -120,9 +122,10 @@
       if (!this.token) return;
 
       var executionTime = calculateMilliseconds(start, end);
+      var usermarker = this.getUserMarker();
 
       var url = BASE_URL + this.token + '/perf?m=' + encodeURIComponent(method) + '&t=' + executionTime;
-      if (!this.dnt) url += '&u=' + encodeURIComponent(this.getUserMarker());
+      if (!this.dnt && usermarker) url += '&u=' + encodeURIComponent(usermarker);
       if (document.referrer) url += '&r=' + encodeURIComponent(document.referrer);
 
       if (additionalValues && typeof additionalValues === 'object') {
@@ -137,9 +140,10 @@
     this.logEvent = function(name, details, additionalValues) {
       if (!this.token) return;
 
+      var usermarker = this.getUserMarker();
       var url = BASE_URL + this.token + '/event?n=' + encodeURIComponent(name);
       if (details) url += '&d=' + encodeURIComponent(details);
-      if (!this.dnt) url += '&u=' + encodeURIComponent(this.getUserMarker());
+      if (!this.dnt && usermarker) url += '&u=' + encodeURIComponent(usermarker);
       if (document.referrer) url += '&r=' + encodeURIComponent(document.referrer);
 
       if (additionalValues && typeof additionalValues === 'object') {
@@ -155,6 +159,7 @@
       if (!this.token || !err) return;
 
       var obj = {};
+      var usermarker = this.getUserMarker();
 
       if (typeof err !== 'object') {
         obj.message = err;
@@ -166,7 +171,7 @@
       obj.stack = (err.stack || '');
       if (details) err.details = details;
 
-      if (!this.dnt) obj.user = this.getUserMarker();
+      if (!this.dnt && usermarker) obj.user = usermarker;
       if (document.referrer) obj.referrer = document.referrer;
 
       if (additionalValues && typeof additionalValues === 'object') {
@@ -183,9 +188,10 @@
     this.logInformation = function (method, details, additionalValues) {
       if (!this.token) return;
 
+      var usermarker = this.getUserMarker();
       var url = BASE_URL + this.token + '/info?m=' + encodeURIComponent(method);
       if (details) url += '&d=' + encodeURIComponent(details);
-      if (!this.dnt) url += '&u=' + encodeURIComponent(this.getUserMarker());
+      if (!this.dnt && usermarker) url += '&u=' + encodeURIComponent(usermarker);
       if (document.referrer) url += '&r=' + encodeURIComponent(document.referrer);
 
       if (additionalValues && typeof additionalValues === 'object') {
@@ -257,6 +263,7 @@
     if (window.justlogit.hasOwnProperty('userid')) logger.userid = window.justlogit.userid;
     if (window.justlogit.hasOwnProperty('dnt')) logger.dnt = window.justlogit.dnt;
     if (window.justlogit.hasOwnProperty('handleGlobalErrors')) logger.handleGlobalErrors = window.justlogit.handleGlobalErrors;
+    if (window.justlogit.hasOwnProperty('generateRandomId')) logger.generateRandomId = window.justlogit.generateRandomId;
 
     window.justlogit = logger;
   }
