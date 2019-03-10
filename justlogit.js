@@ -5,17 +5,19 @@
   var Logger = function() {
 
     var BASE_URL = 'https://addto.justlog.it/v1/log/',
-      COOKIE_NAME = '__jlimarker';
+      COOKIE_NAME = '__jlimarker',
+      me = this;
 
-    var userMarker = '',
-      trackingEnabled = false,
-      doNotTrack = false;
+
+    this.token = '';
+    this.userid = null;
+    this.dnt = false;
+    this.handleGlobalErrors = false;
 
 
     function calculateMilliseconds(start, end) {
       return end.getTime() - start.getTime();
     }
-
 
     function executePostRequest(url, object, callback) {
 
@@ -66,18 +68,19 @@
       }
     }
 
-    function getUserMarker() {
-      if (!userMarker) {
-        userMarker = getMarkerFromCookie();
-        if (!userMarker) {
-          userMarker = createUserMarker();
-          setCookie(userMarker);
+
+    this.getUserMarker = function () {
+      if (!this.userid) {
+        this.userid = this.getMarkerFromCookie();
+        if (!this.userid) {
+          this.userid = createUserMarker();
+          this.setCookie(this.userid);
         }
       }
-      return userMarker;
+      return this.userid;
     }
 
-    function getMarkerFromCookie() {
+    this.getMarkerFromCookie = function () {
       if (document.cookie.indexOf(COOKIE_NAME) === -1) return null;
 
       var cookies = document.cookie.split(';');
@@ -90,8 +93,8 @@
       return null;
     }
 
-    function setCookie(value) {
-      if (!trackingEnabled) return;
+    this.setCookie = function (value) {
+      if (!this.dnt) return;
 
       // set the exp date to a month from now
       var date = new Date();
@@ -100,14 +103,14 @@
       document.cookie = COOKIE_NAME + '=' + value + expires + '; path=/';
     }
 
-
     this.init = function () {
-      var script = getCurrentScript();
-      if (script) {
-        var token = script.attributes['token'];
-        if (token) {
-          this.token = token.value;
-          //userMarker = getUserMarker();
+      if (!this.token) {
+        var script = getCurrentScript();
+        if (script) {
+          var token = script.attributes['token'];
+          if (token) {
+            this.token = token.value;
+          }
         }
       }
     };
@@ -119,9 +122,8 @@
       var executionTime = calculateMilliseconds(start, end);
 
       var url = BASE_URL + this.token + '/perf?m=' + encodeURIComponent(method) + '&t=' + executionTime;
-      if (trackingEnabled) url += '&u=' + encodeURIComponent(getUserMarker());
+      if (!this.dnt) url += '&u=' + encodeURIComponent(this.getUserMarker());
       if (document.referrer) url += '&r=' + encodeURIComponent(document.referrer);
-      if (doNotTrack) url += '&dnt=true';
 
       if (additionalValues && typeof additionalValues === 'object') {
         for (var key in additionalValues) {
@@ -137,9 +139,8 @@
 
       var url = BASE_URL + this.token + '/event?n=' + encodeURIComponent(name);
       if (details) url += '&d=' + encodeURIComponent(details);
-      if (trackingEnabled) url += '&u=' + encodeURIComponent(getUserMarker());
+      if (!this.dnt) url += '&u=' + encodeURIComponent(this.getUserMarker());
       if (document.referrer) url += '&r=' + encodeURIComponent(document.referrer);
-      if (doNotTrack) url += '&dnt=true';
 
       if (additionalValues && typeof additionalValues === 'object') {
         for (var key in additionalValues) {
@@ -163,9 +164,10 @@
       }
 
       obj.stack = (err.stack || '');
-      if (trackingEnabled) obj.user = getUserMarker();
+      if (details) err.details = details;
+
+      if (!this.dnt) obj.user = this.getUserMarker();
       if (document.referrer) obj.referrer = document.referrer;
-      if (doNotTrack) obj.donottrack = true;
 
       if (additionalValues && typeof additionalValues === 'object') {
         for (var key in additionalValues) {
@@ -183,9 +185,8 @@
 
       var url = BASE_URL + this.token + '/info?m=' + encodeURIComponent(method);
       if (details) url += '&d=' + encodeURIComponent(details);
-      if (trackingEnabled) url += '&u=' + encodeURIComponent(getUserMarker());
+      if (!this.dnt) url += '&u=' + encodeURIComponent(this.getUserMarker());
       if (document.referrer) url += '&r=' + encodeURIComponent(document.referrer);
-      if (doNotTrack) url += '&dnt=true';
 
       if (additionalValues && typeof additionalValues === 'object') {
         for (var key in additionalValues) {
@@ -197,19 +198,45 @@
 
 
     this.setUserMarker = function(marker) {
-      userMarker = marker;
-      trackingEnabled = true;
-      setCookie(userMarker);
+      this.userid = marker;
+      this.dnt = false;
+      this.setCookie(userMarker);
     };
 
 
     this.enableUserTracking = function () {
-      trackingEnabled = true;
+      this.dnt = false;
     };
 
 
     this.doNotTrack = function(value) {
-      doNotTrack = value;
+      this.dnt = value;
+    };
+
+
+    window.onerror = function (message, url, line, col, error) {
+      if (me.handleGlobalErrors) {
+        var fauxstack = url + ' line: ' + line;
+        var err = error;
+
+        if (!error) {
+          // build the error
+          err = {};
+          err.message = message;
+          err.stack = fauxstack;
+        }
+        else if (typeof error === 'string') {
+          err = {};
+          err.message = error;
+          err.stack = fauxstack;
+        }
+
+        if (!err.stack) err.stack = fauxstack;
+
+        me.logError(err, message, null);
+      }
+
+      return false;
     };
 
   };
@@ -221,4 +248,17 @@
     logger.init();
     window.justlogit = logger;
   }
+  else if (!window.justlogit.init) {
+    var logger = new Logger();
+    logger.init();
+
+    // store any pre-initalized values
+    if (window.justlogit.hasOwnProperty('token')) logger.token = window.justlogit.token;
+    if (window.justlogit.hasOwnProperty('userid')) logger.userid = window.justlogit.userid;
+    if (window.justlogit.hasOwnProperty('dnt')) logger.dnt = window.justlogit.dnt;
+    if (window.justlogit.hasOwnProperty('handleGlobalErrors')) logger.handleGlobalErrors = window.justlogit.handleGlobalErrors;
+
+    window.justlogit = logger;
+  }
+  
 }());
