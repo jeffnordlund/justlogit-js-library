@@ -206,7 +206,7 @@
     this.setUserMarker = function(marker) {
       this.userid = marker;
       this.dnt = false;
-      this.setCookie(userMarker);
+      this.setCookie(this.userMarker);
     };
 
 
