@@ -1,0 +1,107 @@
+<html>
+<head>
+    <title>JLI Test Page</title>
+</head>
+<style>
+    html, body {
+        font-family: sans-serif;
+        font-size: 16px;
+    }
+
+    .actionblock {
+        margin-top: 12px;
+    }
+</style>
+<body>
+
+    <div>
+        <h3>Run Tests</h3>
+
+        <div class="actionblock">
+            <div>Log An Error</div>
+            <button id="logerror">Log Error</button>
+        </div>
+
+        <div class="actionblock">
+            <div>Log a Performance Entry</div>
+            <button id="logperformance">Log Performance</button>
+        </div>
+
+        <div class="actionblock">
+            <div>Log An Event</div>
+            <button id="logevent">Log Event</button>
+        </div>
+
+        <div class="actionblock">
+            <div>Log An Info Item</div>
+            <button id="loginfo">Log Information</button>
+        </div>
+
+        <div class="actionblock">
+            <div>Test Global Error Handler</div>
+            <button id="globalerror">Global Error</button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function (token) {
+            function append(scriptid, url, async) {
+                var d = document, sn = 'script', f = d.getElementsByTagName(sn)[0];
+                if (!f) f = d.head;
+                var s = d.createElement(sn);
+                s.async = async;
+                s.id = scriptid;
+                s.src = url;
+                f.parentNode.insertBefore(s, f);
+            }
+    
+            window.justlogit = {};
+            window.justlogit.token = token;
+            window.justlogit.userid = '1234';
+            window.justlogit.dnt = false;
+            window.justlogit.handleGlobalErrors = true;
+
+            //append('justlogit', '//cdn.justlog.it/justlogit.min.js', false);
+            append('justlogit', 'justlogit.js', false);
+        })('abc123');
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    <script>
+        $(function () {
+
+            $('#logerror').click(function () {
+                var err = {};
+                err. message = 'This is a test error';
+                err.stack = 'This is the test stack for the error';
+
+                window.justlogit.logError(err, 'Test error');
+            });
+
+            $('#logperformance').click(function () {
+                var start = new Date();
+                setTimeout(function () {
+                    var end = new Date();
+                    window.justlogit.logPerformance(start, end, 'Testing');
+                }, 200);
+                
+            });
+
+
+            $('#logevent').click(function () {
+                window.justlogit.logEvent('Test Click', 'Some details');
+            });
+
+            $('#loginfo').click(function () {
+                window.justlogit.logInformation('Testing', 'Something happened here...');
+            });
+
+            $('#globalerror').click(function () {
+                throw "Global error test";
+            });
+
+        });
+    </script>
+</body>
+</html>
