@@ -118,13 +118,13 @@
     };
 
 
-    this.logPerformance = function (start, end, method, additionalValues) {
+    this.logPerformance = function (start, end, name, additionalValues) {
       if (!this.token) return;
 
       var executionTime = calculateMilliseconds(start, end);
       var usermarker = this.getUserMarker();
 
-      var url = BASE_URL + this.token + '/perf?m=' + encodeURIComponent(method) + '&t=' + executionTime;
+      var url = BASE_URL + this.token + '/perf?m=' + encodeURIComponent(name) + '&t=' + executionTime;
       if (!this.dnt && usermarker) url += '&u=' + encodeURIComponent(usermarker);
       if (document.referrer) url += '&r=' + encodeURIComponent(document.referrer);
 
@@ -211,7 +211,7 @@
 
 
     this.enableUserTracking = function () {
-      this.dnt = false;
+      this.dnt = true;
     };
 
 
