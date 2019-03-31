@@ -211,7 +211,7 @@
 
 
     this.enableUserTracking = function () {
-      this.dnt = true;
+      this.dnt = false;
     };
 
 
